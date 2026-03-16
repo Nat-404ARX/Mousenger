@@ -1,0 +1,249 @@
+@font-face {
+    font-family: "Food";
+    src: url("../assets//fonts/Super\ Foods.ttf") format("truetype");
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: "Joyful";
+    src: url("../assets//fonts/Super\ Joyful.ttf") format("truetype");
+    font-weight: 500;
+}
+
+
+:root {
+    --background: #E0E2E8;
+    --background-element: #B0C0D4;
+    --main: #5DA5B3;
+    --subtitle: #394054;
+    --title: #1C1C1F;
+
+    --font-primary: "Food", sans-serif;
+    --font-secondary: "Joyful", sans-serif;
+}
+
+body {
+    margin: 0;
+    background: var(--background);
+    font-family: var(--font-primary);
+    color: var(--title);
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.chatContainer {
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    width: 100vw;
+}
+
+.chatMain {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    align-items: center;
+    height: 100vh;
+}
+
+.chatLeftColumn {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 15px;
+    height: 100%;
+}
+
+.chatRightColumn {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 15px;
+    height: 100%
+}
+
+
+.chatHeader {
+    position: fixed;
+    top: -15px;
+    width: 35%;
+    height: 5%;
+    padding: 38px 40px;
+    padding-bottom: 7px;
+    background: var(--main);
+    border-radius: 15px;
+    font-weight: bold;
+    color: var(--background);
+    font-size: 1.7em;
+    z-index: 3;
+    transition: opacity 0.3s;
+}
+
+.chatHeader:hover {
+    opacity: 0.2;
+    backdrop-filter: blur(6px);
+}
+
+.chatBody {
+    display: flex;
+    width: 80%;
+    height: 78vh;
+    margin-top: 3px;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.chatFooter {
+    position: fixed;
+    bottom: 4px;
+    z-index: 3;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+    background-color: var(--subtitle);
+    padding: 20px;
+    border: none;
+    border-radius: 15px;
+}
+
+.Btn {
+    border: none;
+    border-radius: 10px;
+    font-size: 1.3em;
+    font-family: var(--font-secondary);
+    background-color: var(--background-element);
+    color: var(--main);
+    padding: 7px 9px;
+    width: 50%;
+}
+
+.messageList {
+    flex: 3;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.messageList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messageList::-webkit-scrollbar-thumb {
+    background: var(--subtitle);
+    border-radius: 10px;
+}
+
+.message {
+    background: var(--background-element);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 60%;
+    font-family: var(--font-primary);
+}
+
+.message.user {
+    margin-left: auto;
+    background: var(--background-element);
+    color: var(--subtitle);
+}
+
+.message.system {
+    margin-left: auto;
+    background: var(--background-element);
+    color: var(--title);
+}
+
+.message.discord {
+    margin-right: auto;
+    background-color: var(--subtitle);
+    color: var(--background-element);
+}
+
+.mascotContainer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mascot {
+    width: 120px;
+}
+
+.messageInputContainer {
+    width: 70%;
+    display: flex;
+    margin-top: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.messageInput {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin-right: 10px;
+    width: 45vw;
+    background-color: var(--background-element);
+    color: var(--subtitle);
+    font-family: var(--font-primary);
+    font-size: 1.05em;
+    text-align: center;
+}
+
+.messageInput::placeholder {
+    color: var(--background);
+    font-family: var(--font-primary);
+    font-size: 1.05em;
+    text-align: center;
+}
+
+.EnvoyerButton {
+    border-radius: 10px;
+    border: none;
+    background-color: var(--background-element);
+    color: var(--title);
+    padding: 8px;
+}
+
+.envoyerIcon {
+    height: 30px;
+}
+
+.contextMenu {
+    background: var(--title);
+    color: var(--main);
+    border-radius: 6px;
+    padding: 5px 0;
+    min-width: 160px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.contextMenu div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.contextMenu div:hover {
+    background: var(--subtitle);
+}
+
+.salonList {
+    color: var(--main);
+    background-color: var(--background-element);
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 15px;
+}
