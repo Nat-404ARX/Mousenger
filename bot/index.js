@@ -10,7 +10,7 @@ const { Client, GatewayIntentBits } = require("discord.js");
 //const TOKEN = process.env.TOKEN;
 //const CHANNEL_ID = process.env.CHANNEL_ID;
 
-import { TOKEN, CHANNEL_ID } from "./temp.js";
+const { TOKEN, CHANNEL_ID } = require("./temp.js");
 
 
 if (!TOKEN || !CHANNEL_ID) {
@@ -30,6 +30,10 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
 
+  socket.on("joinChannel", (channelId) => {
+    socket.join(channelId);
+  });
+
   socket.on("sendMessage", (msg) => {
     messages.push(msg);
     saveMessages();
@@ -37,6 +41,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("newMessage", msg);
   });
 });
+
 
 let messages = [];
 
@@ -53,6 +58,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
   ],
 });
 
@@ -100,52 +107,168 @@ app.get("/server-structure", async (req, res) => {
   res.json(structure);
 });
 
-app.post("/send-message", async (req, res) => {
-  const { message, author, type } = req.body;
-
-  const channel = await client.channels.fetch(CHANNEL_ID);
-
-  await channel.send(message);
-
-  const msg = {
-    id: Date.now(),
-    author,
-    text: message,
-    type,
-  };
-
-  console.log("Message envoyé : ", msg.text, " de ", msg.author);
-
-  messages.push(msg);
-  saveMessages();
-
-  io.emit("newMessage", msg);
-
-  res.json({ status: "ok" });
-});
-
-app.delete("/deleteMessage/:id", async (req, res) => {
-  const messageId = req.params.id;
-
+app.get("/members/:guildId", async (req, res) => {
   try {
-    await fetch(
-      `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${messageId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bot ${TOKEN}`,
-        },
-      },
-    );
+    const guild = await client.guilds.fetch(req.params.guildId);
 
-    res.json({ success: true });
+    const members = await guild.members.fetch();
+
+    const formatted = members.map((member) => {
+      const status = member.presence?.status || "offline";
+
+      return {
+        id: member.id,
+        username: member.user.username,
+        status: status,
+      };
+    });
+
+    const active = formatted.filter((m) => m.status !== "offline");
+    const inactive = formatted.filter((m) => m.status === "offline");
+
+    console.log("Guild ID reçu :", req.params.guildId);
+
+    res.json({
+      active,
+      inactive,
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err });
   }
 });
 
-app.get("/messages", (req, res) => {
-  res.json(messages);
+// app.post("/send-message", async (req, res) => {
+//   const { message, author, type } = req.body;
+
+//   const channel = await client.channels.fetch(CHANNEL_ID);
+
+//   await channel.send(message);
+
+//   const msg = {
+//     id: Date.now(),
+//     author,
+//     text: message,
+//     type,
+//   };
+
+//   console.log("Message envoyé : ", msg.text, " de ", msg.author);
+
+//   messages.push(msg);
+//   saveMessages();
+
+//   io.emit("newMessage", msg);
+
+//   res.json({ status: "ok" });
+// });
+
+app.post("/send-message/:channelId", async (req, res) => {
+  const channelId = req.params.channelId;
+  const { message, author, type } = req.body;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+
+    const discordMessage = await channel.send(message);
+
+    const msg = {
+      id: discordMessage.id,
+      author,
+      text: message,
+      type,
+      channelId,
+    };
+
+    
+
+    console.log("Message envoyé : ",msg.text," de ", msg.author,"(",msg.type,")");
+
+    messages.push(msg);
+    saveMessages();
+
+    io.to(msg.channelId).emit("newMessage", msg);
+
+    res.json({ status: "ok" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+// app.delete("/deleteMessage/:id", async (req, res) => {
+//   const messageId = req.params.id;
+
+//   try {
+//     await fetch(
+//       `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${messageId}`,
+//       {
+//         method: "DELETE",
+//         headers: {
+//           Authorization: `Bot ${TOKEN}`,
+//         },
+//       },
+//     );
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     res.status(500).json({ error: err });
+//   }
+// });
+
+app.delete("/deleteMessage/:channelId/:messageId", async (req, res) => {
+  const { channelId, messageId } = req.params;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+    const msg = await channel.messages.fetch(messageId);
+
+    if (messageId.length < 17) {
+      return res.json({ success: false });
+    }
+
+    await msg.delete();
+
+    messages = messages.filter((m) => m.id !== messageId);
+    saveMessages();
+
+    io.to(msg.channelId).emit("deleteMessage", messageId);
+    //io.emit("deleteMessage", messageId);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+app.get("/messages/:channelId", async (req, res) => {
+  const channelId = req.params.channelId;
+  const before = req.query.before;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+
+    const options = { limit: 30 };
+
+    if (before) {
+      options.before = before;
+    }
+
+    const discordMessages = await channel.messages.fetch(options);
+
+    const formatted = discordMessages.map((m) => ({
+      id: m.id,
+      author: m.author.username,
+      text: m.content,
+      type: m.author.username === "Mouse" ? "user" : "discord",
+      channelId,
+    }));
+
+    res.json(formatted.reverse());
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
 });
 
 app.get("/channel-info", async (req, res) => {
@@ -159,23 +282,24 @@ app.get("/channel-info", async (req, res) => {
 
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
-  if (message.channel.id !== CHANNEL_ID) return;
+  if (!message.guild) return;
   if (message.author.username == "Mouse") return;
 
-
   const msg = {
-    id: Date.now(),
+    id: message.id,
     author: message.author.username,
     text: message.content,
     type: "discord",
+    channelId: message.channel.id,
   };
 
-  console.log("Message reçu :", message.content," de ", message.author.username,);
+  console.log("Message reçu :",message.content," de ",message.author.username,"(",msg.type,")");
 
   messages.push(msg);
   saveMessages();
 
-  io.emit("newMessage", msg);
+  //io.emit("newMessage", msg);
+  io.to(msg.channelId).emit("newMessage", msg);
 });
 
 server.listen(3001, () => {

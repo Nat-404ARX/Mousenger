@@ -4,6 +4,6 @@ export default function ChatHeader({ username, channel }) {
         <div className="chatHeader">
             {username} — #{channel}
         </div>
-    )
+    );
 
 }

@@ -1,8 +1,32 @@
-:root {
-    --background: #E0E2E8;
-    --background-element: #B0C0D4;
-    --main: #5DA5B3;
-    --subtitle: #394054;
-    --title: #1C1C1F;
+@font-face {
+    font-family: "Food";
+    src: url("../assets//fonts/Super\ Foods.ttf") format("truetype");
+    font-weight: 500;
 }
 
+@font-face {
+    font-family: "Joyful";
+    src: url("../assets//fonts/Super\ Joyful.ttf") format("truetype");
+    font-weight: 500;
+}
+
+:root {
+    --background: #394054;
+    --background-element: #1C1C1F;
+    --element: #FCD5CC;
+    --main: #5DA5B3;
+    --subtitle: #B0C0D4;
+    --title: #E0E2E8;
+
+    --active: #3ba55d;
+    --inactive: #afafafe7;
+
+    --font-primary: "Food", sans-serif;
+    --font-secondary: "Joyful", sans-serif;
+}
+
+#login {
+    font-family: var(--font-primary);
+    background-color: var(--background);
+    color: var(--main)
+}
