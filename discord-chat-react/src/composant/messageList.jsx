@@ -1,28 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
 
 const username = localStorage.getItem("username");
 
-export default function MessageList({ messages, onDeleteMessage, loadMoreMessages }) {
+export default function MessageList({
+  messages,
+  onDeleteMessage,
+  loadMoreMessages,
+}) {
   const containerRef = useRef(null);
+  const shouldScrollRef = useRef(true);
   const [contextMenu, setContextMenu] = useState(null);
 
-  // scroll automatique quand nouveaux messages
   useEffect(() => {
-    
     const el = containerRef.current;
     if (!el) return;
 
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-
-    const nearBottom = distanceFromBottom < 120;
-
-    if (nearBottom) {
+    if (shouldScrollRef.current) {
       el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
 
-  // scroll en bas au premier chargement
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -31,12 +29,26 @@ export default function MessageList({ messages, onDeleteMessage, loadMoreMessage
       el.scrollTop = el.scrollHeight;
     }, 50);
   }, []);
-  
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+    shouldScrollRef.current = distanceFromBottom < 120;
+
+
+    if (el.scrollTop < 80) {
+      loadMoreMessages();
+    }
+  };
+
 
   const handleRightClick = (event, msg) => {
     event.preventDefault();
 
-    if (msg.author !== username) return;
+    if (msg.author !== username && msg.author !== "Mouse") return;
 
     setContextMenu({
       x: event.pageX,
@@ -45,25 +57,12 @@ export default function MessageList({ messages, onDeleteMessage, loadMoreMessage
     });
   };
 
-  const handleScroll = () => {
-    const el = containerRef.current;
-
-    if (!el) return;
-
-    if (el.scrollTop < 80) {
-      loadMoreMessages();
-    }
-  };
-
   const deleteMessage = () => {
     if (!contextMenu) return;
 
     onDeleteMessage(contextMenu.message.id);
-
     setContextMenu(null);
   };
-
-  
 
   return (
     <div
@@ -72,13 +71,17 @@ export default function MessageList({ messages, onDeleteMessage, loadMoreMessage
       onScroll={handleScroll}
       onClick={() => setContextMenu(null)}
     >
-      {messages.slice(-100).map((msg) => (
+      {messages.map((msg) => (
         <div
           key={`${msg.id}-${msg.channelId}`}
           className={`message ${msg.type}`}
           onContextMenu={(e) => handleRightClick(e, msg)}
         >
-          <b>{msg.author}</b> : {msg.text}
+          <img src={msg.avatar} className="avatar" />
+          <div className="content">
+            <b>{msg.author}</b> : {msg.text}
+            {msg.image && <img src={msg.image} className="messageImage" />}
+          </div>
         </div>
       ))}
 

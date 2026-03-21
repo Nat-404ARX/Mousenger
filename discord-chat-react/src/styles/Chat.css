@@ -88,7 +88,7 @@ body {
     height: 5%;
     padding: 38px 40px;
     padding-bottom: 7px;
-    background: var(--main);
+    background: var(--element);
     border-radius: 15px;
     font-weight: bold;
     color: var(--background);
@@ -152,6 +152,10 @@ body {
 }
 
 .message {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
     background: var(--background-element);
     padding: 10px;
     border-radius: 10px;
@@ -163,22 +167,46 @@ body {
     white-space: pre-wrap;
 }
 
-.message.user {
+.message.user, .message.message  {
     margin-left: auto;
-    background: var(--background-element);
-    color: var(--subtitle);
+    background: var(--main);
+    color: var(--title);
 }
 
 .message.system {
     margin-left: auto;
-    background: var(--background-element);
-    color: var(--title);
+    background: var(--main);
+    color: var(--subtitle);
 }
 
 .message.discord {
     margin-right: auto;
-    background-color: var(--subtitle);
-    color: var(--background-element);
+    background-color: var(--background-element);
+    color: var(--title);
+}
+
+.message.command {
+    margin-right: auto;
+    background-color: var(--background-element);
+    color: var(--subtitle);
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.messageImage {
+    margin-top: 5px;
+    max-width: 250px;
+    border-radius: 8px;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
 }
 
 .mascotContainer {
@@ -186,6 +214,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 150px;
+    height: 150px;
 }
 
 .mascot {
@@ -207,15 +237,15 @@ body {
     border: none;
     margin-right: 10px;
     width: 45vw;
-    background-color: var(--main);
-    color: var(--subtitle);
+    background-color: var(--background);
+    color: var(--title);
     font-family: var(--font-primary);
     font-size: 1.05em;
     text-align: center;
 }
 
 .messageInput::placeholder {
-    color: var(--background);
+    color: var(--subtitle);
     font-family: var(--font-primary);
     font-size: 1.05em;
     text-align: center;
@@ -270,11 +300,21 @@ body {
     border-radius: 7px;
     padding: 9px 7px;
     margin-bottom: 7px;
+    color: var(--subtitle);
+}
+
+.salonItem {
+    font-size: 18px;
+    color: var(--title)
 }
 
 .userItem {
     padding: 6px 10px;
-    font-size: 14px;
+    font-size: 22px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
 .userItem.online {
@@ -283,4 +323,9 @@ body {
 
 .userItem.offline {
     color: var(--inactive);
+}
+
+.userListTitle {
+    font-size: 28px;
+    font-family: var(--font-secondary);
 }

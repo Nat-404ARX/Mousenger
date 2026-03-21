@@ -1,10 +1,16 @@
-import mascot from "../assets/svg/Mouse/Mouse.svg";
+import mascotIdle from "../assets/svg/Mouse/Mouse.svg";
+import mascotReact from "../assets/svg/MouseMail.svg";
 
+export default function Mascot({ state }) {
+    let src = mascotIdle;
 
-export default function Mascot() {
+    if (state === "react") {
+        src = mascotReact;
+    }
+
     return (
         <div className="mascotContainer">
-        <img src={mascot} alt="mascotte" className="mascot" />
+        <img src={src} alt="Mouse" className="mascot" />
         </div>
     );
 }

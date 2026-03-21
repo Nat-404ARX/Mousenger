@@ -15,12 +15,11 @@ export default function Chat() {
   const [serverStructure, setServerStructure] = useState([]);
   const [currentChannel, setCurrentChannel] = useState(null);
   const [guildId, setGuildId] = useState(null);
+  const [mascotState, setMascotState] = useState("idle");
 
   const socketRef = useRef(null);
 
   const username = localStorage.getItem("username");
-
-  console.log("Connecté en tant que", username);
 
   useEffect(() => {
     if (!currentChannel || !socketRef.current) return;
@@ -41,41 +40,66 @@ export default function Chat() {
       });
   }, [currentChannel]);
 
-
   useEffect(() => {
     socketRef.current = io("http://localhost:3001");
 
-    // socketRef.current.on("newMessage", (msg) => {
-      
-    //   if (msg.channelId !== currentChannel) return;
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, []);
 
-    //   if (msg.text.includes("@", "/", "|")) {
-    //     console.log("Message Intercepté : ", msg.text);
-    //   } else {
-    //     setMessages((prev) => [...prev, msg]);
-    //     if (msg.author !== username) {
-    //       playSound("squeak.mp3");
-    //     }
-    //   }
-    // });
 
-    socketRef.current.on("newMessage", (msg) => {
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const socket = socketRef.current;
+
+    const handleNewMessage = (msg) => {
       if (msg.channelId !== currentChannel) return;
 
       if (msg.author === username) {
         msg.type = "user";
       }
 
-      setMessages((prev) => addMessageSafe(prev, msg));
+      let invalide = false;
+      const filtre = ["@","|","/"];
 
-      if (msg.author !== username) {
-        playSound("squeak.mp3");
+      filtre.forEach(element => {
+        if (msg.text.includes(element)) {
+          invalide = true;
+        }
+      });
+
+      if (invalide) {
+        console.log("Message Intercepté : ", msg.text);
+      } else {
+        setMessages((prev) => addMessageSafe(prev, msg));
+
+        if (msg.author !== username && msg.author !== "Mouse" && msg.type !== "bot") {
+          playSound("squeak.mp3");
+
+          setMascotState("react");
+
+          setTimeout(() => {
+            setMascotState("idle");
+          }, 5000);
+        }
       }
-    });
-    return () => {
-      socketRef.current.disconnect();
     };
-  }, []);
+
+    const handleDelete = (messageId) => {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    socket.on("deleteMessage", handleDelete);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("deleteMessage", handleDelete);
+    };
+  }, [currentChannel]);
+
 
   useEffect(() => {
     axios.get("http://localhost:3001/channel-info").then((res) => {
@@ -98,38 +122,12 @@ export default function Chat() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   axios.get("http://localhost:3001/server-structure").then((res) => {
-  //     setServerStructure(res.data);
-  //   });
-  // }, []);
-
-  useEffect(() => {
-    axios.get("http://localhost:3001/server-structure").then((res) => {
-      setServerStructure(res.data);
-
-      if (res.data.length > 0 && res.data[0].channels.length > 0) {
-        setCurrentChannel(res.data[0].channels[0].id);
-        setChannelName(res.data[0].channels[0].name);
-      }
-
-    });
-  }, []);
 
   const sendMessage = async (text) => {
-    const newMessage = {
-      author: username,
-      text,
-      type: "user",
-    };
-
     await axios.post(`http://localhost:3001/send-message/${currentChannel}`, {
       message: text,
       author: username,
-      type: "user",
     });
-
-    setMessages((prev) => [...prev, newMessage]);
   };
 
   const deleteMessage = async (messageId) => {
@@ -138,7 +136,6 @@ export default function Chat() {
       { method: "DELETE" },
     );
 
-    setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
   };
 
   const loadMoreMessages = async () => {
@@ -173,6 +170,7 @@ export default function Chat() {
     }
     return [...prev, msg];
   }
+
 
   return (
     <div className="chatContainer">
@@ -215,15 +213,12 @@ export default function Chat() {
 
         <div className="chatFooter">
           <MessageInput onSend={sendMessage} />
-          <Mascot />
+          <Mascot state={mascotState} />
         </div>
       </div>
 
-      <div className="chatRightColumn">
-        <div className="userItem">{username}</div>
-        {guildId && <UserList guildId={guildId} />}
-      </div>
+      {guildId && <UserList guildId={guildId} />}
     </div>
   );
-}
+};
 

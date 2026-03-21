@@ -6,11 +6,16 @@ export default function UserList({ guildId }) {
   const [inactive, setInactive] = useState([]);
 
   useEffect(() => {
-    const loadMembers = async () => {
-      const res = await axios.get(`http://localhost:3001/members/${guildId}`);
+    if (!guildId) return;
 
-      setActive(res.data.active);
-      setInactive(res.data.inactive);
+    const loadMembers = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3001/members/${guildId}`);
+        setActive(res.data.active);
+        setInactive(res.data.inactive);
+      } catch (err) {
+        console.error("Erreur chargement membres:", err);
+      }
     };
 
     loadMembers();
@@ -18,12 +23,15 @@ export default function UserList({ guildId }) {
 
   return (
     <div className="chatRightColumn">
-      <div className="userListTitle">
-        Utilisateurs connectés ({active.length})
-      </div>
+      <div className="userListTitle">En ligne ({active.length})</div>
 
       {active.map((user) => (
         <div key={user.id} className="userItem online">
+          <img
+            src={user.avatar}
+            width="45"
+            style={{ borderRadius: "50%", marginRight: 5 }}
+          />
           {user.username}
         </div>
       ))}
@@ -32,6 +40,11 @@ export default function UserList({ guildId }) {
 
       {inactive.map((user) => (
         <div key={user.id} className="userItem offline">
+          <img
+            src={user.avatar}
+            width="45"
+            style={{ borderRadius: "50%", marginRight: 5 }}
+          />
           {user.username}
         </div>
       ))}
