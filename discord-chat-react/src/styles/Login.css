@@ -18,15 +18,67 @@
     --subtitle: #B0C0D4;
     --title: #E0E2E8;
 
-    --active: #3ba55d;
+    --active: #FCD5CC;
     --inactive: #afafafe7;
 
     --font-primary: "Food", sans-serif;
     --font-secondary: "Joyful", sans-serif;
 }
 
-#login {
+body {
+    background-color: var(--background-element);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login {
     font-family: var(--font-primary);
     background-color: var(--background);
-    color: var(--main)
+    color: var(--main);    
+    display:flex;
+    flex-direction: column;
+    width: 30%;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    margin-top: 75px;
+    gap: 40px;
+    padding: 50px;
+    border-radius: 12px;
+}
+
+.inputPseudo {
+    background-color: var(--title);
+    color: var(--main);
+    border-radius: 12px;
+    width: 100%;
+    font-size: 38px;
+    font-family: var(--font-primary);
+    text-align: center;
+}
+
+.inputPseudo:hover {
+    color: var(--main);
+    font-size: 38px;
+    font-family: var(--font-primary);
+}
+
+.submit {
+    border-radius: 10px;
+    width: 50%;
+    font-family: var(--font-secondary);
+    font-size: 42px;
+    border: solid, var(--main), 5px;
+    color: var(--main);
+}
+
+.submit:hover {
+    border: solid, var(--element), 5px;
+    color: var(--element);
+}
+
+.title {
+    font-size: 80px;
+    font-family: var(--font-secondary);
 }

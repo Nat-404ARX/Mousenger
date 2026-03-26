@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import envoyer from "../assets/envoyer.svg";
 
-export default function MessageInput({ onSend }) {
+export default function MessageInput({ onSend, onTyping }) {
     const [text, setText] = useState("");
 
     const bottomRef = useRef(null);
 
     const handleSend = () => {
-        if (!text.trim()) return;
+    if (!text.trim()) return;
 
-        onSend(text);
-        setText("");
-    };
+    onSend(text);
+    setText("");
+
+    if (onTyping) {
+        onTyping(false);
+    }
+};
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -19,20 +23,26 @@ export default function MessageInput({ onSend }) {
 
     return (
         <div className="messageInputContainer">
-            <input
-                className="messageInput"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+        <input
+            className="messageInput"
+            placeholder="Votre Message..."
+            value={text}
+            onChange={(e) => {
+                const value = e.target.value;
+                setText(value);
+
+                if (onTyping) {
+                    onTyping(value.length > 0);
+                }
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
                     handleSend();
-                    }
-                }}
-                placeholder="Écrire un message..."
-            />
+                }
+            }}
+        />
 
             <button className="EnvoyerButton" onClick={handleSend}><img src={envoyer} className="envoyerIcon"/></button>
         </div>
     );
 }
-

@@ -123,11 +123,26 @@ export default function Chat() {
   }, []);
 
 
+  // const sendMessage = async (text) => {
+  //   await axios.post(`http://localhost:3001/send-message/${currentChannel}`, {
+  //     message: text,
+  //     author: username,
+  //   });
+  // };
+
   const sendMessage = async (text) => {
-    await axios.post(`http://localhost:3001/send-message/${currentChannel}`, {
-      message: text,
-      author: username,
-    });
+    try {
+      await axios.post(`http://localhost:3001/send-message/${currentChannel}`, {
+        message: text,
+        author: username,
+      });
+    } catch (err) {
+      setMascotState("error");
+
+      setTimeout(() => {
+        setMascotState("idle");
+      }, 4000);
+    }
   };
 
   const deleteMessage = async (messageId) => {
@@ -212,7 +227,14 @@ export default function Chat() {
         </div>
 
         <div className="chatFooter">
-          <MessageInput onSend={sendMessage} />
+          <MessageInput
+            onSend={sendMessage}
+            onTyping={(isTyping) => {
+              if (mascotState === "idle" || mascotState === "typing") {
+                setMascotState(isTyping ? "typing" : "idle");
+              }
+            }}
+          />
           <Mascot state={mascotState} />
         </div>
       </div>

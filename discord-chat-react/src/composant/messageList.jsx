@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 const username = localStorage.getItem("username");
 
+function boldMessage(text) {
+  if (!text) return "";
+
+  return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+}
+
 export default function MessageList({
   messages,
   onDeleteMessage,
@@ -79,7 +85,22 @@ export default function MessageList({
         >
           <img src={msg.avatar} className="avatar" />
           <div className="content">
-            <b>{msg.author}</b> : {msg.text}
+            <b>{msg.author}</b> :{" "}
+            {msg.type === "info" ? (
+              <div className="userInfoCard">
+                <img src={msg.avatar} className="avatarLarge" />
+                <div>
+                  <div>
+                    <b>{msg.text}</b>
+                  </div>
+                  <div>{msg.bio}</div>
+                </div>
+              </div>
+            ) : (
+              <span
+                dangerouslySetInnerHTML={{ __html: boldMessage(msg.text) }}
+              />
+            )}
             {msg.image && <img src={msg.image} className="messageImage" />}
           </div>
         </div>

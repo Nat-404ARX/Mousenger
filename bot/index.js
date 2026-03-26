@@ -47,32 +47,6 @@ function formatMessage(message) {
   };
 }
 
-function handleCommand(message, io) {
-  const content = message.content.slice(1);
-  const [cmd, ...args] = content.split(" ");
-
-  switch (cmd) {
-    case "ping":
-      return {
-        text: `Pong (${Date.now() - message.createdTimestamp}ms)`,
-      };
-    case "roll":
-      const max = parseInt(args[0]) || 100;
-      const roll = Math.floor(Math.random() * max) + 1;
-      return {
-        text: `Résultat du dé : ${roll} / ${max}`,
-      };
-    case "flip":
-      return {
-        text: Math.random() < 0.5 ? "Pile !" : "Face !",
-      };
-    default:
-      return { text: `Commande inconnue : ${cmd}` };
-  }
-}
-
-
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -82,7 +56,6 @@ const client = new Client({
     GatewayIntentBits.GuildPresences,
   ],
 });
-
 
 client.once("clientReady", () => {
   console.log("Bot connecté :", client.user.tag);
@@ -103,11 +76,149 @@ io.on("connection", (socket) => {
   });
 });
 
+let botAFK = false;
+
+function handleCommand(message, client) {
+  const content = message.content.slice(1);
+  const [cmd, ...args] = content.split(" ");
+  const fullText = args.join(" ");
+  console.log("IO =", io);
+  
+
+  if (botAFK && cmd !== "afk") {
+    return {
+      text: "Mouse est actuellement AFK...",
+    };
+  }
+
+  switch (cmd) {
+    case "?":
+      return {
+        text: `Commandes disponibles :
+\\ping
+\\roll [max]
+\\flip
+\\smile [message]
+\\bold [message]
+`, 
+/*
+\\info [username]
+\\afk*/
+      };
+
+    case "ping":
+      return {
+        text: `Pong (${Date.now() - message.createdTimestamp}ms)`,
+      };
+
+    case "roll":
+      const max = parseInt(args[0]) || 100;
+      const roll = Math.floor(Math.random() * max) + 1;
+      return {
+        text: `Résultat : ${roll} / ${max}`,
+      };
+
+    case "flip":
+      return {
+        text: Math.random() < 0.5 ? "Pile !" : "Face !",
+      };
+
+    case "smile":
+      return {
+        text: `${fullText} :)`,
+      };
+
+    case "bold":
+      return {
+        text: `**${fullText}**`,
+      };
+    /*
+    case "afk":
+      
+      if (!client || !client.user) {
+        return { text: "Mouse n'est pas prêt" };
+      }
+
+      const isAFK = client.user.presence?.status === "idle";
+
+      if (isAFK) {
+        client.user.setPresence({
+          status: "online",
+          activities: [{ name: "Mousenger" }],
+        });
+
+        return { text: "Mouse est de retour !" };
+      } else {
+        client.user.setPresence({
+          status: "idle",
+          activities: [{ name: "AFK" }],
+        });
+
+        return { text: "Mouse est passé en mode AFK" };
+      }
+
+    case "info":
+      const target = args[0];
+
+      if (!target) {
+        return { text: "Utilisation : \\info [username]" };
+      }
+      const user = client.users.cache.find(
+        (u) => u.username.toLowerCase() === target.toLowerCase(),
+      );
+
+      if (!user) {
+        return { text: "Utilisateur introuvable" };
+      }
+
+      return {
+        text: `${user.username}`,
+        avatar: user.displayAvatarURL(),
+        bio: user.bio || "Pas de bio",
+        type: "info",
+      };
+    */
+    default:
+      return { text: `Commande inconnue : ${cmd}` };
+  }
+}
+
 
 client.on("messageCreate", async (message) => {
   if (!message.guild) return;
   if (message.author.bot) return;
 
+  /*
+  if (
+    !message.content &&
+    message.attachments.size === 0 &&
+    message.stickers.size === 0
+  ) {
+    return;
+  }
+
+  if (attachment) {
+    const type = attachment.contentType || "";
+
+    if (type.startsWith("video/") || type.startsWith("audio/")) {
+      return {
+        text: "Fichier non supporté",
+      };
+    }
+  }
+
+  if (message.stickers.size > 0) {
+    return {
+      text: "Sticker",
+    };
+  }
+
+  if (message.poll) {
+    return {
+      text: "Sondage",
+    };
+  }
+  */
   if (message.content.startsWith("\\")) {
     const response = handleCommand(message, io);
 
@@ -181,75 +292,7 @@ app.get("/server-structure", async (req, res) => {
 
   res.json(structure);
 });
-/*
-app.get("/members/:guildId", async (req, res) => {
-  try {
-    const guild = client.guilds.cache.get(req.params.guildId);
-    if (!guild) return res.json({ active: [], inactive: [] });
-    if (!member.user) return;
 
-    await guild.members.fetch();
-
-    const active = [];
-    const inactive = [];
-
-    guild.members.cache.forEach((member) => {
-      if (member.user.bot) return;
-
-      const user = {
-        id: member.id,
-        username: member.user.username,
-        avatar: member.user.displayAvatarURL(),
-      };
-
-      const status = member.presence?.status || "offline";
-
-      if (status === "online") {
-        active.push(user);
-      } else {
-        inactive.push(user);
-      }
-    });
-
-    res.json({ active, inactive });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err });
-  }
-});
-*/
-/*
-app.get("/members/:guildId", async (req, res) => {
-  try {
-    const guild = await client.guilds.fetch(req.params.guildId);
-
-    await guild.members.fetch();
-
-    const active = [];
-    const inactive = [];
-
-    guild.members.cache.forEach((member) => {
-      if (member.user.bot) return;
-
-      const user = {
-        id: member.id,
-        username: member.user.username,
-        avatar: member.user.displayAvatarURL(),
-      };
-
-      if (member.presence?.status === "online") {
-        active.push(user);
-      } else {
-        inactive.push(user);
-      }
-    });
-
-    res.json({ active, inactive });
-  } catch (err) {
-    console.error("Erreur /members:", err);
-    res.status(500).json({ error: err.message });
-  }
-});*/
 
 let lastFetch = 0;
 
@@ -297,7 +340,7 @@ app.post("/send-message/:channelId", async (req, res) => {
   try {
     const channel = await client.channels.fetch(channelId);
 
-    // 🔥 commande
+    // commande
     if (message.startsWith("\\")) {
       const response = handleCommand({ content: message });
 
@@ -310,7 +353,7 @@ app.post("/send-message/:channelId", async (req, res) => {
       return res.json({ success: true });
     }
 
-    // 🔥 message normal
+    // message
     const sent = await channel.send(message);
 
     const msg = formatMessage(sent);
@@ -338,10 +381,6 @@ app.delete("/deleteMessage/:channelId/:messageId", async (req, res) => {
     }
 
     await msg.delete();
-
-    /*
-    messages = messages.filter((m) => m.id !== messageId);
-    saveMessages(); */
 
     io.to(channelId).emit("deleteMessage", messageId);
 

@@ -19,7 +19,7 @@
     --subtitle: #B0C0D4;
     --title:#E0E2E8;
 
-    --active: #3ba55d;
+    --active: #FCD5CC;
     --inactive: #afafafe7;
 
     --font-primary: "Food", sans-serif;
@@ -64,7 +64,7 @@ body {
     width: 20%;
     align-items: center;
     justify-content: flex-start;
-    padding-top: 15px;
+    padding-top: 35px;
     height: 100%;
     background-color: var(--background-element);
 }
@@ -75,7 +75,7 @@ body {
     width: 20%;
     align-items: center;
     justify-content: flex-start;
-    padding-top: 15px;
+    padding-top: 35px;
     height: 100%;
     background-color: var(--background-element);
 }
@@ -219,15 +219,17 @@ body {
 }
 
 .mascot {
-    width: 120px;
+    max-width: 120px;
+    width: 100%;
 }
 
 .messageInputContainer {
     width: 70%;
     display: flex;
     margin-top: 20px;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    margin-bottom: 5px;
 }
 
 .messageInput {
@@ -236,7 +238,8 @@ body {
     border-radius: 10px;
     border: none;
     margin-right: 10px;
-    width: 45vw;
+    margin-bottom: 3px;
+    width: 60vw;
     background-color: var(--background);
     color: var(--title);
     font-family: var(--font-primary);
@@ -313,8 +316,9 @@ body {
     font-size: 22px;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    width: 80%;
 }
 
 .userItem.online {
@@ -326,6 +330,21 @@ body {
 }
 
 .userListTitle {
-    font-size: 28px;
+    font-size: 38px;
     font-family: var(--font-secondary);
+    margin-bottom: 12px;
+    margin-top: 5px;
+}
+
+.userInfoCard {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.avatarLarge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }

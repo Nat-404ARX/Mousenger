@@ -12,15 +12,17 @@ export default function Login({ onLogin }) {
 
     return (
         <div className="login">
-        <h2>Mousenger</h2>
+        <h2 className="title">Mousenger</h2>
 
         <input
+            id="usernameInput"
             placeholder="Ton pseudo"
             value={name}
+            className="inputPseudo"
             onChange={(e) => setName(e.target.value)}
         />
 
-        <button onClick={handleLogin}>Entrer</button>
+        <button onClick={handleLogin} className="submit">Login</button>
         </div>
     );
 }
