@@ -15,6 +15,7 @@ export default function Chat() {
   const [serverStructure, setServerStructure] = useState([]);
   const [currentChannel, setCurrentChannel] = useState(null);
   const [guildId, setGuildId] = useState(null);
+  const [editText, setEditText] = useState("");
   const [mascotState, setMascotState] = useState("idle");
 
   const socketRef = useRef(null);
@@ -223,12 +224,19 @@ export default function Chat() {
             messages={messages}
             onDeleteMessage={deleteMessage}
             loadMoreMessages={loadMoreMessages}
+            onEditMessage={(msg) => {
+              setEditText(msg.text);
+              deleteMessage(msg.id);
+            }}
           />
         </div>
 
         <div className="chatFooter">
           <MessageInput
             onSend={sendMessage}
+            channelId={currentChannel}
+            editText={editText}
+            clearEdit={() => setEditText("")}
             onTyping={(isTyping) => {
               if (mascotState === "idle" || mascotState === "typing") {
                 setMascotState(isTyping ? "typing" : "idle");

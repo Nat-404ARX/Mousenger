@@ -12,6 +12,7 @@ export default function MessageList({
   messages,
   onDeleteMessage,
   loadMoreMessages,
+  onEditMessage
 }) {
   const containerRef = useRef(null);
   const shouldScrollRef = useRef(true);
@@ -113,9 +114,21 @@ export default function MessageList({
             position: "absolute",
             top: contextMenu.y,
             left: contextMenu.x,
+            zIndex: 999,
           }}
         >
-          <div onClick={deleteMessage}>Supprimer le message</div>
+          <div onClick={deleteMessage} className="contextAction">
+            Supprimer le message
+          </div>
+          <div
+            onClick={() => {
+              onEditMessage(contextMenu.message);
+              setContextMenu(null);
+            }}
+            className="contextAction"
+          >
+            Modifier le message
+          </div>
         </div>
       )}
     </div>

@@ -11,18 +11,27 @@ export default function Login({ onLogin }) {
     };
 
     return (
-        <div className="login">
+      <div className="login">
         <h2 className="title">Mousenger</h2>
 
         <input
-            id="usernameInput"
-            placeholder="Ton pseudo"
-            value={name}
-            className="inputPseudo"
-            onChange={(e) => setName(e.target.value)}
+          id="usernameInput"
+          placeholder="Ton Pseudo"
+          value={name}
+          className="inputPseudo"
+          onChange={(e) => setName(e.target.value)}
         />
 
-        <button onClick={handleLogin} className="submit">Login</button>
-        </div>
+        <input
+          id="passwordInput"
+          placeholder="Ton Mot de Passe"
+          className="inputPseudo"
+          type="password"
+        />
+
+        <button onClick={handleLogin} className="submit">
+          Login
+        </button>
+      </div>
     );
 }

@@ -5,6 +5,8 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const { Client, GatewayIntentBits } = require("discord.js");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 
 
 const { TOKEN, CHANNEL_ID } = require("./temp.js");
@@ -264,7 +266,8 @@ app.get("/server-structure", async (req, res) => {
   const salons = [];
 
   channels.forEach((ch) => {
-    if (ch.type === 4) {
+    if (ch.type === 4) {const multer = require("multer");
+    const upload = multer({ dest: "uploads/" });
       categories.push({
         id: ch.id,
         name: ch.name,
@@ -311,7 +314,7 @@ app.get("/members/:guildId", async (req, res) => {
     const inactive = [];
 
     guild.members.cache.forEach((member) => {
-      if (member.user.bot) return;
+      if (member.user.bot) return; //ici pour afficher les bots
 
       const user = {
         id: member.id,
@@ -330,6 +333,30 @@ app.get("/members/:guildId", async (req, res) => {
   } catch (err) {
     console.error("Erreur /members:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/send-image/:channelId", upload.single("image"), async (req, res) => {
+  const { channelId } = req.params;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+
+    const sent = await channel.send({
+      files: [req.file.path],
+    });
+
+    const msg = formatMessage(sent);
+
+    io.to(channelId).emit("newMessage", msg);
+
+    res.json({ success: true });
+
+    const fs = require("fs");
+    fs.unlinkSync(req.file.path);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
   }
 });
 
