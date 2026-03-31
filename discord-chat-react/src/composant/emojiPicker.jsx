@@ -1,10 +1,15 @@
 const emojis = [
   "😀",
+  "🙁",
   "😂",
+  "​​😁​",
   "😍",
+  "🤩",
   "😎",
   "😢",
+  "😅​​",
   "😡",
+  "🙃",
   "​🤑",
   "🥵​",
   "🥶​",
@@ -16,6 +21,7 @@ const emojis = [
   "😵‍💫​",
   "🤯",
   "​😲",
+  "😜​",
   "😈​",
   "👍",
   "👎",
@@ -54,6 +60,7 @@ const emojis = [
   "🌲​",
   "​🐀​",
 ];
+
 
 export default function EmojiPicker({ onSelect } ) {
   return (

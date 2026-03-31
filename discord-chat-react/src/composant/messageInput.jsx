@@ -40,12 +40,9 @@ export default function MessageInput({ onSend, onTyping, editText, clearEdit, ch
 
     
     useEffect(() => {
-        if (!e.target.closest(".emojiPicker")) {
-            const handleClick = () => setShowEmoji(false);
-        } else {
-            const handleClick = () => setShowEmoji(true);
-        }
+        const handleClick = () => setShowEmoji(false);
         window.addEventListener("click", handleClick);
+
         return () => window.removeEventListener("click", handleClick);
     }, []);
     

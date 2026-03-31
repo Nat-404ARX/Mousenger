@@ -39,6 +39,25 @@ body {
     -ms-user-select: none;
 }
 
+body.dark {
+    --background: #394054;
+    --background-element: #1C1C1F;
+    --element: #FCD5CC;
+    --main: #5DA5B3;
+    --subtitle: #B0C0D4;
+    --title: #E0E2E8;
+}
+
+
+body.light {
+    --background: #B0C0D4;
+    --background-element: #E0E2E8;
+    --element: #5DA5B3;
+    --main: #FCD5CC;
+    --subtitle: #394054;
+    --title: #1C1C1F;
+}
+
 .chatContainer {
     height: 100vh;
     display: flex;
@@ -145,6 +164,13 @@ body {
     border-radius: 15px;
 }
 
+.BtnCorner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 17px;
+}
+
 .Btn {
     border: none;
     border-radius: 10px;
@@ -153,7 +179,66 @@ body {
     background-color: var(--element);
     color: var(--background);
     padding: 7px 9px;
-    width: 50%;
+    width: 60%;
+}
+
+.ParametreContainer {
+    position: absolute;
+    top: 72px;
+    left: 50px;
+    background: var(--background);
+    padding: 15px;
+    border-radius: 10px;
+    width: 220px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    width: 350px;
+}
+
+.paramTitle {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 38px;
+    font-family: var(--font-secondary);
+    color: var(--main);
+}
+
+.paramItem {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.paramInput {
+    display: flex;
+    flex-direction: row;
+    width: 90%;
+    justify-content: space-between;
+}
+
+.paramInput input {
+    background-color: var(--element);
+    border: solid, 2px, var(--background-element);
+    font-size: 24px;
+    font-family: var(--font-primary);
+}
+
+.paramItem select {
+    background-color: var(--element);
+    border: solid, 4px, var(--background-element);
+    border-radius: 10px;
+    font-size: 18px;
+    font-family: var(--font-primary);
+    padding: 5px;
+    width: 90%;
+}
+
+.paramItem option:hover {
+    background-color: var(--background-element);
+    color: var(--subtitle);
+    font-family: var(--font-primary);
 }
 
 .messageList {
@@ -242,6 +327,11 @@ body {
 .mascot {
     max-width: 120px;
     width: 100%;
+    transition: transform 0.2s ease;
+}
+
+.mascotContainer:hover .mascot {
+    transform: scale(1.1) rotate(1deg);
 }
 
 .messageInputContainer {
@@ -445,4 +535,112 @@ body {
 
 .emojiBtn:hover {
     transform: scale(1.2);
+}
+
+.voiceContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--background);
+    color: var(--title);
+}
+
+.voiceHeader {
+    padding: 15px;
+    font-weight: bold;
+    background-color: var(--main);
+    border-bottom: 7px solid var(--subtitle);
+    border-radius: 10px;
+    margin-top: 95px;
+    font-size: 38px;
+}
+
+.voiceBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: var(--subtitle);
+    margin: 10px 0;
+}
+
+.voiceFooter {
+    padding: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    align-items: center;
+}
+
+.leaveBtn {
+    width: 90%;
+    padding: 10px;
+    background: var(--element);
+    color: var(--background-element);
+    font-size: 35px;
+    font-family: var(--font-secondary);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.soundboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
+    padding: 10px;
+    width: 90%;
+}
+
+.soundBtn {
+    background: var(--background-element);
+    border-radius: 10px;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.soundBtn:hover {
+    transform: scale(1.1);
+    background: var(--main);
+}
+
+.emoji {
+    font-size: 24px;
+}
+
+.label {
+    font-size: 12px;
+    color: var(--subtitle);
+}
+
+.voiceUsers {
+    padding: 10px;
+}
+
+.voiceUser {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.voiceUser img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.hide {
+    visibility: collapse;
+}
+
+.info {
+    font-family: var(--font-secondary);
+    font-size: 15px;
 }

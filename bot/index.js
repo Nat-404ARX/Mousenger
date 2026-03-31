@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const { Client, GatewayIntentBits } = require("discord.js");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
+const { createAudioPlayer, createAudioResource } = require("@discordjs/voice");
 
 
 const { TOKEN, CHANNEL_ID } = require("./temp.js");
@@ -77,6 +78,8 @@ io.on("connection", (socket) => {
     console.log("Client rejoint :", channelId);
   });
 });
+
+const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 
 let botAFK = false;
 
@@ -185,6 +188,28 @@ function handleCommand(message, client) {
   }
 }
 
+function joinVoice(channel) {
+  const connection = joinVoiceChannel({
+    channelId: channel.id,
+    guildId: channel.guild.id,
+    adapterCreator: channel.guild.voiceAdapterCreator,
+  });
+
+  return connection;
+}
+
+function leaveVoice(guildId) {
+  const connection = getVoiceConnection(guildId);
+  if (connection) connection.destroy();
+}
+
+function playSound(connection, file) {
+  const player = createAudioPlayer();
+  const resource = createAudioResource(file);
+
+  connection.subscribe(player);
+  player.play(resource);
+}
 
 client.on("messageCreate", async (message) => {
   if (!message.guild) return;
@@ -275,12 +300,23 @@ app.get("/server-structure", async (req, res) => {
       });
     }
 
+    if (ch.type === 2) {
+      salons.push({
+        id: ch.id,
+        name: ch.name,
+        parentId: ch.parentId,
+        position: ch.position,
+        type: "voice",
+      });
+    }
+
     if (ch.type === 0) {
       salons.push({
         id: ch.id,
         name: ch.name,
         parentId: ch.parentId,
         position: ch.position,
+        type: "text",
       });
     }
   });
@@ -439,6 +475,30 @@ app.get("/messages/:channelId", async (req, res) => {
   }
 });
 
+app.post("/join-voice/:channelId", async (req, res) => {
+  try {
+    const channel = await client.channels.fetch(req.params.channelId);
+
+    if (!channel || channel.type !== 2) {
+      return res.status(400).json({ error: "Pas un salon vocal" });
+    }
+
+    leaveVoice(channel.guild.id);
+
+    joinVoice(channel);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/leave-voice/:guildId", (req, res) => {
+  leaveVoice(req.params.guildId);
+  res.json({ success: true });
+});
+
 app.get("/channel-info", async (req, res) => {
   const channel = await client.channels.fetch(CHANNEL_ID);
 
@@ -446,6 +506,67 @@ app.get("/channel-info", async (req, res) => {
     name: channel.name,
     id: channel.id,
   });
+});
+
+app.get("/voice-members/:channelId", async (req, res) => {
+  try {
+    const channel = await client.channels.fetch(req.params.channelId);
+
+    if (!channel || channel.type !== 2) {
+      return res.json([]);
+    }
+
+    const members = channel.members.map((member) => ( {
+      id: member.id,
+      username: member.user.username,
+      avatar: member.user.displayAvatarURL(),
+      
+    }));
+
+    res.json(members);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/soundboard/:channelId", async (req, res) => {
+  try {
+    
+    const { file } = req.body;
+
+    const allowedSounds = [
+      "squeak.mp3",
+      "ding.mp3",
+      "laugh.mp3",
+      "boom.mp3",
+      "quack.mp3",
+      "lick.mp3",
+      "drump.mp3",
+      "vine.mp3",
+    ];
+
+    if (!allowedSounds.includes(file)) {
+      return res.status(400).json({ error: "Son non autorisé" });
+    }
+
+    const channel = await client.channels.fetch(req.params.channelId);
+
+    if (!file) {
+      return res.status(400).json({ error: "Aucun fichier fourni" });
+    }
+
+    leaveVoice(channel.guild.id);
+    const connection = joinVoice(channel);
+
+    playSound(connection, `./sounds/${file}`);
+    console.log("Son jouer :", file);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 server.listen(3001, () => {
