@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "../styles/home.css";
 
 import mouseRun from "../assets/MouseMove.gif"; 
+import hole from "../assets/hole.svg";
 import logo from "../assets/favicon.png";
 
 export default function Home() {
@@ -22,29 +23,23 @@ export default function Home() {
     }, []);
 
     return (
-        <div className="home">
-            <div className="loadingContainer">
+      <div className="home">
+        <div className="loadingContainer">
+          <img src={logo} alt="Mousenger" className="logo" />
+          <div className="progress">
+            <img src={hole} className="hole" />
+            <div className="progressBar">
+              <div className="progressFill" style={{ width: `${progress}%` }} />
 
-                {/* Logo */}
-                <img src={logo} alt="Mousenger" className="logo" />
-
-                {/* Barre */}
-                <div className="progressBar">
-                    <div 
-                        className="progressFill"
-                        style={{ width: `${progress}%` }}
-                    />
-
-                    {/* Mouse */}
-                    <img 
-                        src={mouseRun}
-                        alt="Mouse"
-                        className="mouse"
-                        style={{ left: `${Math.max(progress - 20, 0)}%` }}
-                    />
-                </div>
-
+              <img
+                src={mouseRun}
+                alt="Mouse"
+                className="mouse"
+                style={{ left: `${Math.max(progress - 20, 0)}%` }}
+              />
             </div>
+          </div>
         </div>
+      </div>
     );
 }

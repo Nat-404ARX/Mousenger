@@ -7,7 +7,7 @@ const { Server } = require("socket.io");
 const { Client, GatewayIntentBits } = require("discord.js");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
-const { createAudioPlayer, createAudioResource } = require("@discordjs/voice");
+const { createAudioPlayer, createAudioResource, AudioPlayerStatus } = require("@discordjs/voice");
 
 
 const { TOKEN, CHANNEL_ID } = require("./temp.js");
@@ -55,8 +55,14 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessagePolls,
+    GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildExpressions,
+    GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -79,7 +85,15 @@ io.on("connection", (socket) => {
   });
 });
 
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+
+const {
+  joinVoiceChannel,
+  getVoiceConnection,
+  entersState,
+  VoiceConnectionStatus,
+} = require("@discordjs/voice");
+
+console.log("Sodium chargé :", !!require("sodium-native"));
 
 let botAFK = false;
 
@@ -137,7 +151,7 @@ function handleCommand(message, client) {
       return {
         text: `**${fullText}**`,
       };
-    /*
+      /*
     case "afk":
       
       if (!client || !client.user) {
@@ -188,11 +202,29 @@ function handleCommand(message, client) {
   }
 }
 
+
 function joinVoice(channel) {
-  const connection = joinVoiceChannel({
+  let connection = getVoiceConnection(channel.guild.id);
+
+  if (connection) {
+    return connection;
+  }
+
+  if (channel.members.size === 0) {
+    console.log("Salon vocal vide");
+    return res.status(400).json({ error: "Salon vide" });
+  }
+
+  connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
     adapterCreator: channel.guild.voiceAdapterCreator,
+    selfDeaf: false,
+    selfMute: false,
+  });
+
+  connection.on("stateChange", (oldState, newState) => {
+    console.log("Voice state:", newState.status);
   });
 
   return connection;
@@ -203,49 +235,35 @@ function leaveVoice(guildId) {
   if (connection) connection.destroy();
 }
 
-function playSound(connection, file) {
+function playSoundDiscord(connection, file) {
   const player = createAudioPlayer();
-  const resource = createAudioResource(file);
+
+  const resource = createAudioResource(file, {
+    inlineVolume: true,
+  });
+
+  resource.volume.setVolume(0.5);
 
   connection.subscribe(player);
   player.play(resource);
+
+  player.on(AudioPlayerStatus.Playing, () => {
+    console.log("Lecture en cours");
+  });
+
+  player.on(AudioPlayerStatus.Idle, () => {
+    console.log("Fin du son");
+  });
+
+  player.on("error", (err) => {
+    console.error("Erreur audio :", err);
+  });
 }
 
 client.on("messageCreate", async (message) => {
   if (!message.guild) return;
   if (message.author.bot) return;
 
-  /*
-  if (
-    !message.content &&
-    message.attachments.size === 0 &&
-    message.stickers.size === 0
-  ) {
-    return;
-  }
-
-  if (attachment) {
-    const type = attachment.contentType || "";
-
-    if (type.startsWith("video/") || type.startsWith("audio/")) {
-      return {
-        text: "Fichier non supporté",
-      };
-    }
-  }
-
-  if (message.stickers.size > 0) {
-    return {
-      text: "Sticker",
-    };
-  }
-
-  if (message.poll) {
-    return {
-      text: "Sondage",
-    };
-  }
-  */
   if (message.content.startsWith("\\")) {
     const response = handleCommand(message, io);
 
@@ -271,6 +289,18 @@ client.on("messageCreate", async (message) => {
   if (invalide) {
     console.log("Message bloqué :", message.content, "de", message.author.username);
     return;
+  }
+
+  if (message.stickers.size > 0) {
+    return {
+      text: "Sticker",
+    };
+  }
+
+  if (message.poll) {
+    return {
+      text: "Sondage",
+    };
   }
 
   const msg = formatMessage(message);
@@ -494,6 +524,8 @@ app.post("/join-voice/:channelId", async (req, res) => {
   }
 });
 
+
+
 app.post("/leave-voice/:guildId", (req, res) => {
   leaveVoice(req.params.guildId);
   res.json({ success: true });
@@ -530,6 +562,8 @@ app.get("/voice-members/:channelId", async (req, res) => {
   }
 });
 
+console.log("Opus chargé :", !!require("@discordjs/opus"));
+
 app.post("/soundboard/:channelId", async (req, res) => {
   try {
     
@@ -544,6 +578,10 @@ app.post("/soundboard/:channelId", async (req, res) => {
       "lick.mp3",
       "drump.mp3",
       "vine.mp3",
+      "metal-pipe.mp3",
+      "scream.mp3",
+      "dun-dun-dun.mp3" ,
+      "lego-breaking.mp3" 
     ];
 
     if (!allowedSounds.includes(file)) {
@@ -556,15 +594,104 @@ app.post("/soundboard/:channelId", async (req, res) => {
       return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
-    leaveVoice(channel.guild.id);
     const connection = joinVoice(channel);
 
-    playSound(connection, `./sounds/${file}`);
+    const path = require("path");
+
     console.log("Son jouer :", file);
+    playSoundDiscord(
+      connection,
+      path.join(__dirname, "public", "sounds", file),
+    );
+    ;
 
     res.json({ success: true });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const gTTS = require("gtts");
+const fs = require("fs");
+const path = require("path");
+const { exec } = require("child_process");
+
+function execPromise(cmd) {
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      console.log("🧪 FFmpeg stdout:", stdout);
+      console.log("🧪 FFmpeg stderr:", stderr);
+
+      if (error) {
+        console.error("FFmpeg erreur:", error);
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
+app.post("/tts/:channelId", async (req, res) => {
+  try {
+    const { text, pitch = 1, speed = 1 } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: "Texte vide" });
+    }
+
+    console.log("TTS reçu :", text);
+
+    const filePath = path.join(__dirname, "tts.mp3");
+    const modifiedPath = path.join(__dirname, "tts_fixed.mp3");
+
+    const gtts = new gTTS(text, "fr");
+
+    await new Promise((resolve, reject) => {
+      gtts.save(filePath, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    console.log("filePath existe :", fs.existsSync(filePath));
+    console.log("modifiedPath existe :", fs.existsSync(modifiedPath));
+
+    const stats = fs.existsSync(modifiedPath) && fs.statSync(modifiedPath);
+    console.log("taille fichier :", stats ? stats.size : "NULL");
+    
+    await execPromise(
+      `ffmpeg -y -i ${filePath} -filter:a "asetrate=44100*${pitch},atempo=${speed}" ${modifiedPath}`,
+    );
+
+    console.log("Audio prêt");
+
+
+    const channel = await client.channels.fetch(req.params.channelId);
+
+    const connection = joinVoice(channel);
+
+    connection.on("error", console.error);
+
+
+    const { entersState, VoiceConnectionStatus } = require("@discordjs/voice");
+
+    await entersState(connection, VoiceConnectionStatus.Connecting, 5000);
+    await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+
+    console.log("Connecté au vocal");
+
+
+    playSoundDiscord(connection, "./public/sounds/ding.mp3");
+    playSoundDiscord(connection, modifiedPath);
+
+    fs.unlinkSync(filePath);
+    fs.unlinkSync(modifiedPath);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("TTS erreur :", err);
     res.status(500).json({ error: err.message });
   }
 });
