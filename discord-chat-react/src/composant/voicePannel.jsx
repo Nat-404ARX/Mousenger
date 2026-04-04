@@ -48,7 +48,8 @@ export default function VoicePanel({ channelName, guildId, isConnected, setIsCon
           )}
 
           <button
-            className="Btn"
+            //className="Btn"
+            className="hide"
             onClick={() => setActiveMenu(activeMenu === "tts" ? null : "tts")}
           >
             TTS

@@ -5,19 +5,48 @@ export default function TTSPanel({ channelId }) {
   const [pitch, setPitch] = useState(1);
   const [speed, setSpeed] = useState(1);
 
-  const sendTTS = () => {
+
+  const sendTTS = async () => {
     if (!text.trim()) return;
 
-    fetch(`http://localhost:3001/tts/${channelId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text, pitch, speed }),
-    });
+    try {
+      const res = await fetch(`http://localhost:3001/tts/${channelId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, pitch, speed }),
+      });
 
-    setText("");
+      const data = await res.json();
+
+      if (data.url) {
+        console.log(data.url)
+        playTTS(data.url);
+      }
+
+      setText();
+    } catch (err) {
+      console.error("Erreur TTS :", err);
+    }
   };
+
+  let currentAudio = null;
+
+  function playTTS(url) {
+    if (currentAudio) {
+      currentAudio.pause();
+    }
+
+    const audio = new Audio(url);
+    currentAudio = audio;
+
+    audio.volume = 1;
+
+    audio.play().catch((err) => {
+      console.error("Erreur lecture :", err);
+    });
+  }
 
   return (
     <div className="ttsPanel">

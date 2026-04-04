@@ -218,6 +218,8 @@ export default function Chat() {
     });
   }, [settings]);
 
+  
+
   return (
     <div className="chatContainer">
       <div className="chatLeftColumn">

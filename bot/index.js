@@ -120,9 +120,6 @@ function handleCommand(message, client) {
 \\smile [message]
 \\bold [message]
 `, 
-/*
-\\info [username]
-\\afk*/
       };
 
     case "ping":
@@ -151,57 +148,13 @@ function handleCommand(message, client) {
       return {
         text: `**${fullText}**`,
       };
-      /*
-    case "afk":
-      
-      if (!client || !client.user) {
-        return { text: "Mouse n'est pas prêt" };
-      }
-
-      const isAFK = client.user.presence?.status === "idle";
-
-      if (isAFK) {
-        client.user.setPresence({
-          status: "online",
-          activities: [{ name: "Mousenger" }],
-        });
-
-        return { text: "Mouse est de retour !" };
-      } else {
-        client.user.setPresence({
-          status: "idle",
-          activities: [{ name: "AFK" }],
-        });
-
-        return { text: "Mouse est passé en mode AFK" };
-      }
-
-    case "info":
-      const target = args[0];
-
-      if (!target) {
-        return { text: "Utilisation : \\info [username]" };
-      }
-      const user = client.users.cache.find(
-        (u) => u.username.toLowerCase() === target.toLowerCase(),
-      );
-
-      if (!user) {
-        return { text: "Utilisateur introuvable" };
-      }
-
-      return {
-        text: `${user.username}`,
-        avatar: user.displayAvatarURL(),
-        bio: user.bio || "Pas de bio",
-        type: "info",
-      };
-    */
     default:
       return { text: `Commande inconnue : ${cmd}` };
   }
 }
 
+const player = createAudioPlayer();
+let currentConnection = null;
 
 function joinVoice(channel) {
   let connection = getVoiceConnection(channel.guild.id);
@@ -235,9 +188,8 @@ function leaveVoice(guildId) {
   if (connection) connection.destroy();
 }
 
-function playSoundDiscord(connection, file) {
-  const player = createAudioPlayer();
 
+function playSoundDiscord(connection, file) {
   const resource = createAudioResource(file, {
     inlineVolume: true,
   });
@@ -246,19 +198,30 @@ function playSoundDiscord(connection, file) {
 
   connection.subscribe(player);
   player.play(resource);
-
-  player.on(AudioPlayerStatus.Playing, () => {
-    console.log("Lecture en cours");
-  });
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    console.log("Fin du son");
-  });
-
-  player.on("error", (err) => {
-    console.error("Erreur audio :", err);
-  });
 }
+
+const queue = [];
+let isPlaying = false;
+
+function playNext(connection) {
+  if (queue.length === 0) {
+    isPlaying = false;
+    return;
+  }
+
+  isPlaying = true;
+  const file = queue.shift();
+
+  const resource = createAudioResource(file, { inlineVolume: true });
+  resource.volume.setVolume(0.5);
+
+  connection.subscribe(player);
+  player.play(resource);
+}
+
+player.on(AudioPlayerStatus.Idle, () => {
+  playNext(currentConnection);
+});
 
 client.on("messageCreate", async (message) => {
   if (!message.guild) return;
@@ -620,8 +583,8 @@ const { exec } = require("child_process");
 function execPromise(cmd) {
   return new Promise((resolve, reject) => {
     exec(cmd, (error, stdout, stderr) => {
-      console.log("🧪 FFmpeg stdout:", stdout);
-      console.log("🧪 FFmpeg stderr:", stderr);
+      console.log("FFmpeg stdout:", stdout);
+      console.log("FFmpeg stderr:", stderr);
 
       if (error) {
         console.error("FFmpeg erreur:", error);
@@ -634,8 +597,8 @@ function execPromise(cmd) {
 }
 
 app.post("/tts/:channelId", async (req, res) => {
-  try {
-    const { text, pitch = 1, speed = 1 } = req.body;
+  
+  const { text, pitch = 1, speed = 1 } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: "Texte vide" });
@@ -659,7 +622,7 @@ app.post("/tts/:channelId", async (req, res) => {
     console.log("modifiedPath existe :", fs.existsSync(modifiedPath));
 
     const stats = fs.existsSync(modifiedPath) && fs.statSync(modifiedPath);
-    console.log("taille fichier :", stats ? stats.size : "NULL");
+    //console.log("taille fichier :", stats ? stats.size : "NULL");
     
     await execPromise(
       `ffmpeg -y -i ${filePath} -filter:a "asetrate=44100*${pitch},atempo=${speed}" ${modifiedPath}`,
@@ -667,34 +630,18 @@ app.post("/tts/:channelId", async (req, res) => {
 
     console.log("Audio prêt");
 
+    res.json({
+      success: true,
+      url: `http://localhost:3001/audio/${modifiedPath}`
+    });
 
-    const channel = await client.channels.fetch(req.params.channelId);
-
-    const connection = joinVoice(channel);
-
-    connection.on("error", console.error);
-
-
-    const { entersState, VoiceConnectionStatus } = require("@discordjs/voice");
-
-    await entersState(connection, VoiceConnectionStatus.Connecting, 5000);
-    await entersState(connection, VoiceConnectionStatus.Ready, 5000);
-
-    console.log("Connecté au vocal");
-
-
-    playSoundDiscord(connection, "./public/sounds/ding.mp3");
-    playSoundDiscord(connection, modifiedPath);
-
-    fs.unlinkSync(filePath);
-    fs.unlinkSync(modifiedPath);
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("TTS erreur :", err);
-    res.status(500).json({ error: err.message });
+    setTimeout(() => {
+      fs.unlink(modifiedPath, () => {});
+    }, 30000);
   }
-});
+);
+
+app.use("/audio", express.static(path.join(__dirname)));
 
 server.listen(3001, () => {
   console.log("API bot lancée sur port 3001");
